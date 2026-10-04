@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Age on Other Planets</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :focus-visible { outline: 3px solid #38bdf8; outline-offset: 2px; }
+    @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .planet-spin:hover .planet-emoji { display: inline-block; animation: spin-slow 4s linear infinite; }
+  </style>
+</head>
+<body class="bg-gray-950 min-h-screen text-white">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <header class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-white">Your Age on Other Planets</h1>
+      <p class="text-gray-400 mt-2">Discover how old you'd be if you lived on every world in our solar system.</p>
+    </header>
+
+    <div class="max-w-sm mx-auto bg-gray-900 rounded-xl p-6 mb-8">
+      <label for="birthdate" class="block text-sm font-medium text-gray-300 mb-2">Your Birthdate</label>
+      <input type="date" id="birthdate"
+        class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-sky-400"
+        aria-describedby="bdHint" />
+      <p id="bdHint" class="text-xs text-gray-500 mt-1">Select your date of birth to calculate.</p>
+    </div>
+
+    <div id="results" class="hidden">
+      <p id="earthAge" class="text-center text-gray-300 mb-6 text-lg"></p>
+      <div id="planetGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    </div>
+
+    <p id="placeholder" class="text-center text-gray-600 text-sm mt-12">Enter your birthdate above to begin.</p>
+  </div>
+
+  <script>
+    const PLANETS = [
+      { name: 'Moon',    emoji: '🌕', period: 0.0748,  color: 'from-gray-700 to-gray-600',    fact: 'The Moon completes an orbit in ~27.3 days.' },
+      { name: 'Mercury', emoji: '☿',  period: 0.2408,  color: 'from-orange-900 to-orange-700', fact: 'A year on Mercury is just 88 Earth days.' },
+      { name: 'Venus',   emoji: '♀',  period: 0.6152,  color: 'from-yellow-700 to-amber-500',  fact: 'Venus spins backward compared to most planets.' },
+      { name: 'Mars',    emoji: '♂',  period: 1.8809,  color: 'from-red-900 to-red-700',       fact: 'Mars has the tallest volcano in the solar system.' },
+      { name: 'Jupiter', emoji: '♃',  period: 11.862,  color: 'from-orange-800 to-amber-700',  fact: 'Jupiter is so large, all other planets could fit inside.' },
+      { name: 'Saturn',  emoji: '♄',  period: 29.457,  color: 'from-yellow-800 to-yellow-600', fact: 'Saturn\'s rings are mostly water ice and rock.' },
+      { name: 'Uranus',  emoji: '⛢',  period: 84.011,  color: 'from-teal-800 to-cyan-600',     fact: 'Uranus rotates on its side with an axial tilt of 98°.' },
+      { name: 'Neptune', emoji: '♆',  period: 164.8,   color: 'from-blue-900 to-blue-700',     fact: 'Winds on Neptune can exceed 2,000 km/h.' },
+    ];
+
+    function calcAge() {
+      const bd = document.getElementById('birthdate').value;
+      if (!bd) return;
+      const birth = new Date(bd);
+      const now = new Date();
+      if (birth > now) return;
+
+      const msPerDay = 86400000;
+      const earthDays = (now - birth) / msPerDay;
+      const earthYears = earthDays / 365.25;
+
+      document.getElementById('placeholder').style.display = 'none';
+      document.getElementById('results').classList.remove('hidden');
+      document.getElementById('earthAge').textContent =
+        `You are ${earthYears.toFixed(2)} Earth years old (${Math.round(earthDays).toLocaleString()} days).`;
+
+      const grid = document.getElementById('planetGrid');
+      grid.innerHTML = PLANETS.map(p => {
+        const planetAge = earthYears / p.period;
+        const nextBirthday = Math.ceil(planetAge);
+        const daysToNext = ((nextBirthday - planetAge) * p.period * 365.25);
+        const daysLabel = daysToNext < 1
+          ? '🎉 Today!'
+          : daysToNext < 2
+          ? 'Tomorrow!'
+          : `${Math.round(daysToNext)} Earth days`;
+
+        return `
+          <div class="planet-spin bg-gradient-to-br ${p.color} rounded-2xl p-5 flex flex-col gap-2 border border-white/10 hover:border-white/30 transition-all">
+            <div class="text-4xl text-center planet-emoji" aria-hidden="true">${p.emoji}</div>
+            <div class="text-center font-bold text-white text-lg">${p.name}</div>
+            <div class="text-center text-2xl font-bold text-white">${planetAge.toFixed(2)}</div>
+            <div class="text-center text-xs text-white/60">${p.name} years old</div>
+            <div class="border-t border-white/10 pt-2 mt-1">
+              <div class="text-xs text-white/50 text-center">Next birthday</div>
+              <div class="text-xs text-yellow-300 text-center font-medium">${daysLabel}</div>
+            </div>
+            <div class="text-xs text-white/40 text-center leading-snug mt-1">${p.fact}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // Default to 30 years ago
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 30);
+    document.getElementById('birthdate').value = d.toISOString().split('T')[0];
+    document.getElementById('birthdate').addEventListener('change', calcAge);
+    calcAge();
+  </script>
+</body>
+</html>
